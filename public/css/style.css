@@ -1,0 +1,193 @@
+:root {
+    --emerald: #008f5a;
+    --emerald-light: #12a66b;
+    --dark-green: #064e3b;
+    --deep-green: #022c22;
+    --yellow: #f4c430;
+    --yellow-light: #fff4b8;
+    --white: #ffffff;
+    --off-white: #f5f8f6;
+    --gray: #6b7280;
+    --light-gray: #e5e7eb;
+    --danger: #dc2626;
+    --success: #15803d;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: var(--off-white);
+
+    color: #1f2937;
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 20px;
+}
+
+.card {
+    width: 100%;
+    max-width: 520px;
+
+    background: var(--white);
+
+    padding: 35px;
+
+    border-radius: 16px;
+
+    border-top: 6px solid var(--yellow);
+
+    box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.12);
+}
+
+.header {
+    text-align: center;
+
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    margin: 0;
+
+    color: var(--dark-green);
+
+    font-size: 30px;
+}
+.header h3 {
+    margin: 0;
+
+    color: var(--yellow);
+}
+
+.header p {
+    color: var(--gray);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-weight: 700;
+
+    color: var(--dark-green);
+}
+
+input,
+select {
+    width: 100%;
+
+    padding: 14px;
+
+    border: 2px solid var(--light-gray);
+
+    border-radius: 8px;
+
+    font-size: 16px;
+
+    background: white;
+
+    transition: 0.2s;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+
+    border-color: var(--emerald);
+
+    box-shadow:
+        0 0 0 3px rgba(0, 143, 90, 0.12);
+}
+
+button {
+    width: 100%;
+
+    padding: 15px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: var(--emerald);
+
+    color: var(--white);
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+button:hover {
+    background: var(--dark-green);
+}
+
+button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+.message {
+    display: none;
+
+    margin-top: 20px;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    text-align: center;
+
+    font-weight: 600;
+}
+
+.message.success {
+    display: block;
+
+    background: #dcfce7;
+
+    color: #166534;
+}
+
+.message.error {
+    display: block;
+
+    background: #fee2e2;
+
+    color: #991b1b;
+}
+
+.message.loading {
+    display: block;
+
+    background: var(--yellow-light);
+
+    color: #854d0e;
+}

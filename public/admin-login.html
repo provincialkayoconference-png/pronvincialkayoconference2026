@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ACK Registration - Admin Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="header">
+
+            <h1>
+                ACK ADMIN
+            </h1>
+
+            <p>
+                Registration Management
+            </p>
+
+        </div>
+
+
+        <form id="loginForm">
+
+            <div class="form-group">
+
+                <label>
+                    Username
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter username"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Password
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                id="loginButton"
+            >
+                LOGIN
+            </button>
+
+        </form>
+
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const form =
+    document.getElementById(
+        "loginForm"
+    );
+
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+const button =
+    document.getElementById(
+        "loginButton"
+    );
+
+
+form.addEventListener(
+    "submit",
+    async event => {
+
+        event.preventDefault();
+
+
+        const username =
+            document.getElementById(
+                "username"
+            ).value;
+
+
+        const password =
+            document.getElementById(
+                "password"
+            ).value;
+
+
+        button.disabled = true;
+
+        button.textContent =
+            "LOGGING IN...";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/admin/login",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                username,
+                                password
+                            })
+
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.success) {
+
+                message.textContent =
+                    "Login successful. Redirecting...";
+
+                message.className =
+                    "message success";
+
+
+                setTimeout(() => {
+
+                    window.location.href =
+                        "/admin.html";
+
+                }, 500);
+
+
+            } else {
+
+                message.textContent =
+                    data.message;
+
+                message.className =
+                    "message error";
+
+            }
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            message.textContent =
+                "Unable to connect to server.";
+
+            message.className =
+                "message error";
+
+        }
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "LOGIN";
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>

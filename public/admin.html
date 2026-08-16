@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Provincial Kayo Conference 2026 - Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/admin.css"
+    >
+
+</head>
+
+<body>
+
+<header class="admin-header">
+
+    <div class="brand">
+
+        <div>
+            <h1>
+                PROVINCIAL KAYO CONFERENCE 2026
+                <span>ADMIN</span>
+            </h1>
+
+            <small>
+                Empowered to Lead, Serve & Transform
+            </small>
+        </div>
+
+    </div>
+
+    <button
+        class="logout-btn"
+        onclick="logout()"
+    >
+        Logout
+    </button>
+
+</header>
+
+
+<main class="dashboard">
+
+
+    <!-- ======================================
+         STATISTICS
+    ======================================= -->
+
+    <section class="stats-grid">
+
+        <div class="stat-card">
+
+            <h3>
+                Total Registrations
+            </h3>
+
+            <div
+                class="number"
+                id="totalRegistrations"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>
+                Male
+            </h3>
+
+            <div
+                class="number"
+                id="totalMale"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h3>
+                Female
+            </h3>
+
+            <div
+                class="number"
+                id="totalFemale"
+            >
+                0
+            </div>
+
+        </div>
+
+
+        <div class="stat-card yellow">
+
+            <h3>
+                Pending Payments
+            </h3>
+
+            <div
+                class="number"
+                id="pendingPayments"
+            >
+                0
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ======================================
+         EXPORT
+    ======================================= -->
+
+    <section class="panel">
+
+        <h2 class="panel-title">
+            Export Registrations
+        </h2>
+
+        <div class="filters">
+
+            <div class="filter-group">
+
+                <label>
+                    Diocese
+                </label>
+
+                <select id="exportDiocese">
+
+                    <option value="">
+                        All Dioceses
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <div class="filter-actions">
+
+            <button
+                class="btn btn-green"
+                onclick="exportRegistrations()"
+            >
+                Export Excel
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ======================================
+         FILTERS
+    ======================================= -->
+
+    <section class="panel">
+
+        <h2 class="panel-title">
+            Registrations
+        </h2>
+
+
+        <div class="filters">
+
+
+            <div class="filter-group">
+
+                <label>
+                    Search Name
+                </label>
+
+                <input
+                    type="text"
+                    id="searchName"
+                    placeholder="Search..."
+                >
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>
+                    Diocese
+                </label>
+
+                <select id="filterDiocese">
+
+                    <option value="">
+                        All Dioceses
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>
+                    Gender
+                </label>
+
+                <select id="filterGender">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="MALE">
+                        Male
+                    </option>
+
+                    <option value="FEMALE">
+                        Female
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>
+                    Payment Method
+                </label>
+
+                <select id="filterPaymentMethod">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="MPESA">
+                        M-Pesa
+                    </option>
+
+                    <option value="CASH">
+                        Cash
+                    </option>
+
+                    <option value="CHEQUE">
+                        Cheque
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="filter-group">
+
+                <label>
+                    Payment Status
+                </label>
+
+                <select id="filterPaymentStatus">
+
+                    <option value="">
+                        All
+                    </option>
+
+                    <option value="PAID">
+                        Paid
+                    </option>
+
+                    <option value="PENDING">
+                        Pending
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <div class="filter-actions">
+
+            <button
+                class="btn btn-green"
+                onclick="loadRegistrations()"
+            >
+                Apply Filters
+            </button>
+
+            <button
+                class="btn btn-secondary"
+                onclick="clearFilters()"
+            >
+                Clear
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ======================================
+         REGISTRATION TABLE
+    ======================================= -->
+
+    <section class="panel">
+
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Registration No.
+                        </th>
+
+                        <th>
+                            Name
+                        </th>
+
+                        <th>
+                            Diocese
+                        </th>
+
+                        <th>
+                            Gender
+                        </th>
+
+                        <th>
+                            Payment
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="registrationTable">
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            style="text-align:center"
+                        >
+                            Loading registrations...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ======================================
+         DIOCESE SUMMARY
+    ======================================= -->
+
+    <section class="panel">
+
+        <h2 class="panel-title">
+            Registrations by Diocese
+        </h2>
+
+        <div
+            class="diocese-grid"
+            id="dioceseSummary"
+        >
+
+            Loading...
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<script src="/js/admin.js"></script>
+
+</body>
+
+</html>
