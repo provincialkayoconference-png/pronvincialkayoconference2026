@@ -16,9 +16,11 @@ async function loadDioceses() {
 
 
         if (!data.success) {
+
             throw new Error(
                 "Failed to load dioceses"
             );
+
         }
 
 
@@ -38,8 +40,10 @@ async function loadDioceses() {
             const option =
                 document.createElement("option");
 
+
             option.value =
                 diocese.id;
+
 
             option.textContent =
                 diocese.name;
@@ -48,6 +52,7 @@ async function loadDioceses() {
             filter.appendChild(
                 option.cloneNode(true)
             );
+
 
             exportSelect.appendChild(
                 option
@@ -79,6 +84,7 @@ async function loadStatistics() {
             await fetch(
                 "/api/admin/statistics"
             );
+
 
         const data =
             await response.json();
@@ -153,6 +159,7 @@ function renderDioceseSummary(data) {
         const card =
             document.createElement("div");
 
+
         card.className =
             "diocese-card";
 
@@ -174,7 +181,9 @@ function renderDioceseSummary(data) {
         `;
 
 
-        container.appendChild(card);
+        container.appendChild(
+            card
+        );
 
     });
 
@@ -222,39 +231,54 @@ async function loadRegistrations() {
             ).value;
 
 
-        if (search)
+        if (search) {
+
             params.append(
                 "search",
                 search
             );
 
+        }
 
-        if (diocese)
+
+        if (diocese) {
+
             params.append(
                 "diocese",
                 diocese
             );
 
+        }
 
-        if (gender)
+
+        if (gender) {
+
             params.append(
                 "gender",
                 gender
             );
 
+        }
 
-        if (paymentMethod)
+
+        if (paymentMethod) {
+
             params.append(
                 "payment_method",
                 paymentMethod
             );
 
+        }
 
-        if (paymentStatus)
+
+        if (paymentStatus) {
+
             params.append(
                 "payment_status",
                 paymentStatus
             );
+
+        }
 
 
         const response =
@@ -316,7 +340,7 @@ function renderRegistrations() {
             <tr>
 
                 <td
-                    colspan="8"
+                    colspan="11"
                     style="text-align:center"
                 >
                     No registrations found.
@@ -326,7 +350,12 @@ function renderRegistrations() {
 
         `;
 
+
+        updateBulkPaymentBar();
+
+
         return;
+
     }
 
 
@@ -348,6 +377,10 @@ function renderRegistrations() {
                 : "status-pending";
 
 
+        // ============================================
+        // INDIVIDUAL PAYMENT BUTTON
+        // ============================================
+
         const paymentButton =
             reg.payment_status === "PENDING"
                 ? `
@@ -361,76 +394,318 @@ function renderRegistrations() {
                 : "";
 
 
+        // ============================================
+        // SELECTION CHECKBOX
+        // ============================================
+
+        const checkbox =
+            reg.payment_status === "PENDING"
+                ? `
+                    <input
+                        type="checkbox"
+                        class="payment-checkbox"
+                        value="${reg.id}"
+                        onchange="updateBulkPaymentBar()"
+                    >
+                  `
+                : `
+                    <span>
+                        -
+                    </span>
+                  `;
+
+
         row.innerHTML = `
 
-    <td>
-        <strong>
-            ${reg.registration_no}
-        </strong>
-    </td>
+            <td>
+                ${checkbox}
+            </td>
 
-    <td>
-        ${reg.full_name}
-    </td>
+            <td>
+                <strong>
+                    ${reg.registration_no}
+                </strong>
+            </td>
 
-    <td>
-        ${reg.diocese}
-    </td>
+            <td>
+                ${reg.full_name}
+            </td>
 
-    <td>
-        ${reg.gender}
-    </td>
+            <td>
+                ${reg.diocese}
+            </td>
 
-    <td>
-        ${formatPayment(reg.payment_method)}
-    </td>
+            <td>
+                ${reg.gender}
+            </td>
 
-    <td>
-        ${reg.payment_reference || "-"}
-    </td>
+            <td>
+                ${formatPayment(
+                    reg.payment_method
+                )}
+            </td>
 
-    <td>
-        ${
-            reg.amount_received !== null &&
-            reg.amount_received !== undefined
-                ? `Ksh ${Number(reg.amount_received).toLocaleString()}`
-                : "-"
-        }
-    </td>
+            <td>
+                ${reg.payment_reference || "-"}
+            </td>
 
-    <td>
+            <td>
+                ${
+                    reg.amount_received !== null &&
+                    reg.amount_received !== undefined
+                        ? `Ksh ${Number(
+                            reg.amount_received
+                        ).toLocaleString()}`
+                        : "-"
+                }
+            </td>
 
-        <span
-            class="status ${statusClass}"
-        >
-            ${reg.payment_status}
-        </span>
+            <td>
 
-    </td>
+                <span
+                    class="status ${statusClass}"
+                >
+                    ${reg.payment_status}
+                </span>
 
-    <td>
-        ${date}
-    </td>
+            </td>
 
-    <td>
+            <td>
+                ${date}
+            </td>
 
-        ${paymentButton}
+            <td>
 
-        <button
-            class="action-btn delete-btn"
-            onclick="deleteRegistration(${reg.id})"
-        >
-            Delete
-        </button>
+                ${paymentButton}
 
-    </td>
+                <button
+                    class="action-btn delete-btn"
+                    onclick="deleteRegistration(${reg.id})"
+                >
+                    Delete
+                </button>
 
-`;
+            </td>
+
+        `;
 
 
-        table.appendChild(row);
+        table.appendChild(
+            row
+        );
 
     });
+
+
+    updateBulkPaymentBar();
+
+}
+
+
+// ============================================
+// UPDATE BULK PAYMENT CONTROLS
+// ============================================
+function updateBulkPaymentBar() {
+
+    const checkboxes =
+        document.querySelectorAll(
+            ".payment-checkbox"
+        );
+
+
+    const selected =
+        Array.from(checkboxes)
+            .filter(
+                checkbox =>
+                    checkbox.checked
+            );
+
+
+    const selectedCount =
+        selected.length;
+
+
+    const countElement =
+        document.getElementById(
+            "selectedPaymentCount"
+        );
+
+
+    const bulkButton =
+        document.getElementById(
+            "bulkPayButton"
+        );
+
+
+    const selectAllCheckbox =
+        document.getElementById(
+            "selectAllPayments"
+        );
+
+
+    if (countElement) {
+
+        countElement.textContent =
+            `${selectedCount} selected`;
+
+    }
+
+
+    if (bulkButton) {
+
+        bulkButton.disabled =
+            selectedCount === 0;
+
+    }
+
+
+    if (selectAllCheckbox) {
+
+        selectAllCheckbox.checked =
+            checkboxes.length > 0 &&
+            selectedCount === checkboxes.length;
+
+    }
+
+}
+
+
+// ============================================
+// SELECT / DESELECT ALL PENDING
+// ============================================
+function toggleSelectAllPayments(
+    checkbox
+) {
+
+    const checkboxes =
+        document.querySelectorAll(
+            ".payment-checkbox"
+        );
+
+
+    checkboxes.forEach(item => {
+
+        item.checked =
+            checkbox.checked;
+
+    });
+
+
+    updateBulkPaymentBar();
+
+}
+
+
+// ============================================
+// BULK MARK PAID
+// ============================================
+async function bulkMarkPaid() {
+
+    const checkboxes =
+        document.querySelectorAll(
+            ".payment-checkbox:checked"
+        );
+
+
+    const ids =
+        Array.from(checkboxes)
+            .map(
+                checkbox =>
+                    Number(
+                        checkbox.value
+                    )
+            );
+
+
+    if (ids.length === 0) {
+
+        alert(
+            "Please select at least one pending payment."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `You are about to mark ${ids.length} registration(s) as PAID.\n\n` +
+            `Already-paid registrations will not be changed.\n\n` +
+            `Do you want to continue?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/admin/registrations/bulk-payment",
+                {
+
+                    method: "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        ids: ids
+
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            alert(
+                data.message ||
+                "Failed to confirm payments."
+            );
+
+            return;
+
+        }
+
+
+        alert(
+            data.message
+        );
+
+
+        await loadRegistrations();
+
+        await loadStatistics();
+
+
+    } catch (error) {
+
+        console.error(
+            "Bulk payment error:",
+            error
+        );
+
+
+        alert(
+            "Failed to confirm selected payments."
+        );
+
+    }
 
 }
 
@@ -443,13 +718,18 @@ function formatPayment(method) {
     if (method === "MPESA")
         return "M-Pesa";
 
+
     if (method === "CASH")
         return "Cash";
 
+
     if (method === "CHEQUE")
         return "Cheque";
+
+
     if (method === "BANK_TRANSFER")
         return "Bank Transfer";
+
 
     return method;
 
@@ -457,16 +737,15 @@ function formatPayment(method) {
 
 
 // ============================================
-// MARK PAYMENT PAID
-// ============================================
-// ============================================
-// CONFIRM PAYMENT
+// CONFIRM INDIVIDUAL PAYMENT
 // ============================================
 async function markPaid(id) {
 
     const registration =
         registrations.find(
-            reg => Number(reg.id) === Number(id)
+            reg =>
+                Number(reg.id) ===
+                Number(id)
         );
 
 
@@ -484,9 +763,13 @@ async function markPaid(id) {
     let paymentReference = "";
 
 
-    // Ask for payment reference only when M-Pesa
+    // ============================================
+    // M-PESA
+    // ============================================
+
     if (
-        registration.payment_method === "MPESA"
+        registration.payment_method ===
+        "MPESA"
     ) {
 
         paymentReference =
@@ -498,14 +781,23 @@ async function markPaid(id) {
             );
 
 
-        // User clicked Cancel
-        if (paymentReference === null) {
+        if (
+            paymentReference ===
+            null
+        ) {
 
             return;
 
         }
 
-    } else {
+    }
+
+
+    // ============================================
+    // CASH / CHEQUE / BANK
+    // ============================================
+
+    else {
 
         const confirmed =
             confirm(
@@ -528,11 +820,14 @@ async function markPaid(id) {
             await fetch(
                 `/api/admin/registrations/${id}/payment`,
                 {
+
                     method: "PATCH",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body: JSON.stringify({
@@ -602,8 +897,9 @@ async function deleteRegistration(id) {
         );
 
 
-    if (!confirmed)
+    if (!confirmed) {
         return;
+    }
 
 
     try {
@@ -612,7 +908,9 @@ async function deleteRegistration(id) {
             await fetch(
                 `/api/admin/registrations/${id}`,
                 {
+
                     method: "DELETE"
+
                 }
             );
 
@@ -629,6 +927,7 @@ async function deleteRegistration(id) {
             );
 
             return;
+
         }
 
 
@@ -640,8 +939,10 @@ async function deleteRegistration(id) {
     } catch (error) {
 
         console.error(
+            "Delete error:",
             error
         );
+
 
         alert(
             "Failed to delete registration"
@@ -729,9 +1030,12 @@ async function logout() {
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
     }
+
 
     window.location.href =
         "/admin-login.html";

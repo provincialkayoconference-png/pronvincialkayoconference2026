@@ -641,6 +641,112 @@ app.patch(
 
     }
 );
+// ============================================
+// ADMIN - BULK CONFIRM PAYMENTS
+// ============================================
+app.patch(
+    "/api/admin/registrations/bulk-payment",
+    requireAdmin,
+    async (req, res) => {
+
+        try {
+
+            const { ids } = req.body;
+
+
+            // Validate IDs
+            if (
+                !Array.isArray(ids) ||
+                ids.length === 0
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "No registrations were selected."
+
+                });
+
+            }
+
+
+            // Convert IDs to numbers and remove duplicates
+            const cleanIds =
+                [...new Set(
+                    ids
+                        .map(id => Number(id))
+                        .filter(id => Number.isInteger(id))
+                )];
+
+
+            if (cleanIds.length === 0) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "No valid registrations were selected."
+
+                });
+
+            }
+
+
+            // ============================================
+            // CONFIRM ONLY PENDING PAYMENTS
+            // ============================================
+
+            const result =
+                await pool.query(
+                    `UPDATE registrations
+                     SET payment_status = 'PAID'
+                     WHERE id = ANY($1::int[])
+                     AND payment_status = 'PENDING'
+                     RETURNING id, registration_no, full_name`,
+                    [cleanIds]
+                );
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    `${result.rows.length} payment(s) confirmed successfully.`,
+
+                updated:
+                    result.rows.length,
+
+                registrations:
+                    result.rows
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Bulk payment confirmation error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Failed to confirm selected payments."
+
+            });
+
+        }
+
+    }
+);
 
 // ============================================
 // ADMIN - DELETE REGISTRATION

@@ -318,84 +318,142 @@
 
 
 
+<!-- ======================================
+     REGISTRATION TABLE
+======================================= -->
+
+<section class="panel">
+
     <!-- ======================================
-         REGISTRATION TABLE
+         BULK PAYMENT CONTROLS
     ======================================= -->
 
-    <section class="panel">
+    <div
+        class="bulk-payment-toolbar"
+        id="bulkPaymentToolbar"
+    >
 
-        <div class="table-container">
+        <label
+            class="select-all-label"
+        >
 
-            <table>
+            <input
+                type="checkbox"
+                id="selectAllPayments"
+                onchange="toggleSelectAllPayments(this)"
+            >
 
-                <thead>
+            <span>
+                Select All Pending
+            </span>
 
-                    <tr>
+        </label>
 
-                        <th>
-                            Registration No.
-                        </th>
 
-                        <th>
-                            Name
-                        </th>
+        <span
+            id="selectedPaymentCount"
+            class="selected-payment-count"
+        >
+            0 selected
+        </span>
 
-                        <th>
-                            Diocese
-                        </th>
 
-                        <th>
-                            Gender
-                        </th>
+        <button
+            type="button"
+            class="btn btn-green"
+            id="bulkPayButton"
+            onclick="bulkMarkPaid()"
+            disabled
+        >
+            Mark Selected as Paid
+        </button>
 
-                        <th>
-                            Payment
-                        </th>
+    </div>
 
-                        <th>
-                            Reference
-                        </th>
 
-                        <th>
-                            Amount
-                        </th>
+    <!-- ======================================
+         TABLE
+    ======================================= -->
 
-                        <th>
-                            Status
-                        </th>
+    <div class="table-container">
 
-                        <th>
-                            Date
-                        </th>
+        <table>
 
-                        <th>
-                            Actions
-                        </th>
+            <thead>
 
-                    </tr>
+    <tr>
 
-                </thead>
+        <th>
+            Select
+        </th>
 
-                <tbody id="registrationTable">
+        <th>
+            Registration No.
+        </th>
 
-                    <tr>
+        <th>
+            Name
+        </th>
 
-                        <td
-                            colspan="8"
-                            style="text-align:center"
-                        >
-                            Loading registrations...
-                        </td>
+        <th>
+            Diocese
+        </th>
 
-                    </tr>
+        <th>
+            Gender
+        </th>
 
-                </tbody>
+        <th>
+            Payment
+        </th>
 
-            </table>
+        <th>
+            Reference
+        </th>
 
-        </div>
+        <th>
+            Amount
+        </th>
 
-    </section>
+        <th>
+            Status
+        </th>
+
+        <th>
+            Date
+        </th>
+
+        <th>
+            Actions
+        </th>
+
+    </tr>
+
+</thead>
+
+
+            <tbody
+                id="registrationTable"
+            >
+
+                <tr>
+
+                    <td
+                        colspan="11"
+                        style="text-align:center"
+                    >
+                        Loading registrations...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 
 
