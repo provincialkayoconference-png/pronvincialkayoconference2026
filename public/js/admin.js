@@ -363,58 +363,69 @@ function renderRegistrations() {
 
         row.innerHTML = `
 
-            <td>
-                <strong>
-                    ${reg.registration_no}
-                </strong>
-            </td>
+    <td>
+        <strong>
+            ${reg.registration_no}
+        </strong>
+    </td>
 
-            <td>
-                ${reg.full_name}
-            </td>
+    <td>
+        ${reg.full_name}
+    </td>
 
-            <td>
-                ${reg.diocese}
-            </td>
+    <td>
+        ${reg.diocese}
+    </td>
 
-            <td>
-                ${reg.gender}
-            </td>
+    <td>
+        ${reg.gender}
+    </td>
 
-            <td>
-                ${formatPayment(
-                    reg.payment_method
-                )}
-            </td>
+    <td>
+        ${formatPayment(reg.payment_method)}
+    </td>
 
-            <td>
+    <td>
+        ${reg.payment_reference || "-"}
+    </td>
 
-                <span
-                    class="status ${statusClass}"
-                >
-                    ${reg.payment_status}
-                </span>
+    <td>
+        ${
+            reg.amount_received !== null &&
+            reg.amount_received !== undefined
+                ? `Ksh ${Number(reg.amount_received).toLocaleString()}`
+                : "-"
+        }
+    </td>
 
-            </td>
+    <td>
 
-            <td>
-                ${date}
-            </td>
+        <span
+            class="status ${statusClass}"
+        >
+            ${reg.payment_status}
+        </span>
 
-            <td>
+    </td>
 
-                ${paymentButton}
+    <td>
+        ${date}
+    </td>
 
-                <button
-                    class="action-btn delete-btn"
-                    onclick="deleteRegistration(${reg.id})"
-                >
-                    Delete
-                </button>
+    <td>
 
-            </td>
+        ${paymentButton}
 
-        `;
+        <button
+            class="action-btn delete-btn"
+            onclick="deleteRegistration(${reg.id})"
+        >
+            Delete
+        </button>
+
+    </td>
+
+`;
 
 
         table.appendChild(row);
