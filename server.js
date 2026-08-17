@@ -174,23 +174,20 @@ if (cleanPaymentMethod === "CASH") {
 }
 
 
-// MPESA
+// // MPESA
 if (cleanPaymentMethod === "MPESA") {
 
-    if (
-        !mpesa_code ||
-        !mpesa_code.trim()
-    ) {
+    // M-Pesa code is OPTIONAL.
+    // If the registrant has one, save it.
+    // If they don't have one, leave payment reference as NULL.
 
-        return res.status(400).json({
-            success: false,
-            message: "Please enter the M-Pesa transaction code."
-        });
+    if (mpesa_code && mpesa_code.trim()) {
+
+        paymentReference =
+            mpesa_code.trim().toUpperCase();
 
     }
 
-    paymentReference =
-        mpesa_code.trim().toUpperCase();
 }
 
 
@@ -546,7 +543,7 @@ app.get("/api/admin/statistics", requireAdmin, async (req, res) => {
 
 
 // ============================================
-// ADMIN - MARK PAYMENT AS PAID
+// ADMIN - CONFIRM PAYMENT
 // ============================================
 app.patch(
     "/api/admin/registrations/:id/payment",
@@ -555,17 +552,42 @@ app.patch(
 
         try {
 
-            const { id } =
-                req.params;
+            const { id } = req.params;
+
+            const {
+                payment_reference
+            } = req.body;
+
+
+            // Clean payment reference
+            let cleanReference = null;
+
+            if (
+                payment_reference &&
+                payment_reference.trim()
+            ) {
+
+                cleanReference =
+                    payment_reference
+                        .trim()
+                        .toUpperCase();
+
+            }
 
 
             const result =
                 await pool.query(
                     `UPDATE registrations
-                     SET payment_status = 'PAID'
-                     WHERE id = $1
+                     SET
+                        payment_status = 'PAID',
+                        payment_reference =
+                            COALESCE($1, payment_reference)
+                     WHERE id = $2
                      RETURNING *`,
-                    [id]
+                    [
+                        cleanReference,
+                        id
+                    ]
                 );
 
 
@@ -590,7 +612,10 @@ app.patch(
                 success: true,
 
                 message:
-                    "Payment marked as paid"
+                    "Payment confirmed successfully",
+
+                registration:
+                    result.rows[0]
 
             });
 
@@ -598,7 +623,7 @@ app.patch(
         } catch (error) {
 
             console.error(
-                "Payment update error:",
+                "Payment confirmation error:",
                 error
             );
 
@@ -608,7 +633,7 @@ app.patch(
                 success: false,
 
                 message:
-                    "Failed to update payment"
+                    "Failed to confirm payment"
 
             });
 
@@ -616,7 +641,6 @@ app.patch(
 
     }
 );
-
 
 // ============================================
 // ADMIN - DELETE REGISTRATION
@@ -691,291 +715,358 @@ app.delete(
 // ============================================
 // ADMIN - EXPORT EXCEL
 // ============================================
-app.get("/api/admin/export",
+app.get(
+    "/api/admin/export",
     requireAdmin,
     async (req, res) => {
 
-    try {
+        try {
 
-        const {
-            diocese
-        } = req.query;
-
-
-        let query = `
-            SELECT
-                r.registration_no,
-                r.full_name,
-                d.name AS diocese,
-                r.gender,
-                r.payment_method,
-                r.payment_reference,
-                r.amount_received,
-                r.payment_status,
-                r.created_at
-            FROM registrations r
-            JOIN dioceses d
-                ON r.diocese_id = d.id
-        `;
+            const {
+                diocese
+            } = req.query;
 
 
-        const values = [];
+            // ============================================
+            // GET REGISTRATIONS
+            // ============================================
 
-
-        // Export selected diocese only
-        if (diocese) {
-
-            query += `
-                WHERE r.diocese_id = $1
+            let query = `
+                SELECT
+                    r.registration_no,
+                    r.full_name,
+                    d.name AS diocese,
+                    r.gender,
+                    r.payment_method,
+                    r.payment_reference,
+                    r.amount_received,
+                    r.payment_status,
+                    r.created_at
+                FROM registrations r
+                JOIN dioceses d
+                    ON r.diocese_id = d.id
             `;
 
-            values.push(diocese);
-        }
+
+            const values = [];
 
 
-        query += `
-            ORDER BY r.id ASC
-        `;
+            // ============================================
+            // FILTER BY DIOCESE
+            // ============================================
 
+            if (diocese) {
 
-        const result =
-            await pool.query(
-                query,
-                values
-            );
+                query += `
+                    WHERE r.diocese_id = $1
+                `;
 
+                values.push(diocese);
 
-        // ====================================
-        // CREATE EXCEL WORKBOOK
-        // ====================================
-
-        const workbook =
-            new ExcelJS.Workbook();
-
-
-        const worksheet =
-            workbook.addWorksheet(
-                "Registrations"
-            );
-
-
-        // ====================================
-        // TITLE
-        // ====================================
-
-        worksheet.mergeCells(
-            "A1:G1"
-        );
-
-        worksheet.getCell(
-            "A1"
-        ).value =
-            "PROVINCIAL KAYO CONFERENCE 2026 - REGISTRATIONS";
-
-
-        worksheet.getCell(
-            "A1"
-        ).font = {
-            bold: true,
-            size: 18
-        };
-
-
-        worksheet.getCell(
-            "A1"
-        ).alignment = {
-            horizontal: "center"
-        };
-
-
-        // ====================================
-        // HEADERS
-        // ====================================
-
-        worksheet.addRow([
-            "Registration No.",
-            "Full Name",
-            "Diocese",
-            "Gender",
-            "Payment Method",
-            "Payment Reference",
-            "Amount Received",
-            "Payment Status",
-            "Registration Date"
-        ]);
-
-
-        const header =
-            worksheet.getRow(2);
-
-
-        header.font = {
-            bold: true
-        };
-
-
-        header.alignment = {
-            horizontal: "center"
-        };
-
-
-        // ====================================
-        // DATA
-        // ====================================
-
-        result.rows.forEach(row => {
-
-            worksheet.addRow([
-
-                row.registration_no,
-
-                row.full_name,
-
-                row.diocese,
-
-                row.gender,
-
-                formatPaymentMethod(
-                    row.payment_method
-                ),
-
-                row.payment_status,
-
-                new Date(
-                    row.created_at
-                ).toLocaleString()
-
-            ]);
-
-        });
-
-
-        // ====================================
-        // COLUMN WIDTHS
-        // ====================================
-
-        worksheet.columns = [
-
-            {
-                width: 20
-            },
-
-            {
-                width: 30
-            },
-
-            {
-                width: 25
-            },
-
-            {
-                width: 15
-            },
-
-            {
-                width: 20
-            },
-
-            {
-                width: 20
-            },
-
-            {
-                width: 25
             }
 
-        ];
+
+            query += `
+                ORDER BY r.id ASC
+            `;
 
 
-        // ====================================
-        // FREEZE HEADER
-        // ====================================
-
-        worksheet.views = [
-            {
-                state: "frozen",
-                ySplit: 2
-            }
-        ];
-
-
-        // ====================================
-        // FILE NAME
-        // ====================================
-
-        let fileName =
-            "Provincial_kayo_conference-Registrations.xlsx";
-
-
-        if (diocese) {
-
-            const dioceseResult =
+            const result =
                 await pool.query(
-                    "SELECT name FROM dioceses WHERE id = $1",
-                    [diocese]
+                    query,
+                    values
                 );
 
 
-            if (
-                dioceseResult.rows.length > 0
-            ) {
+            // ============================================
+            // CREATE EXCEL WORKBOOK
+            // ============================================
 
-                const cleanName =
-                    dioceseResult.rows[0].name
-                        .replace(
-                            /[^a-zA-Z0-9]+/g,
-                            "-"
-                        );
+            const workbook =
+                new ExcelJS.Workbook();
 
 
-                fileName =
-                    `${cleanName}-Registrations.xlsx`;
+            const worksheet =
+                workbook.addWorksheet(
+                    "Registrations"
+                );
+
+
+            // ============================================
+            // TITLE
+            // ============================================
+
+            worksheet.mergeCells(
+                "A1:I1"
+            );
+
+
+            const titleCell =
+                worksheet.getCell(
+                    "A1"
+                );
+
+
+            titleCell.value =
+                "PROVINCIAL KAYO CONFERENCE 2026 - REGISTRATIONS";
+
+
+            titleCell.font = {
+                bold: true,
+                size: 18
+            };
+
+
+            titleCell.alignment = {
+                horizontal: "center",
+                vertical: "middle"
+            };
+
+
+            worksheet.getRow(1).height = 30;
+
+
+            // ============================================
+            // HEADERS
+            // ============================================
+
+            worksheet.addRow([
+                "Registration No.",
+                "Full Name",
+                "Diocese",
+                "Gender",
+                "Payment Method",
+                "Payment Reference",
+                "Amount Received",
+                "Payment Status",
+                "Registration Date"
+            ]);
+
+
+            const header =
+                worksheet.getRow(2);
+
+
+            header.font = {
+                bold: true
+            };
+
+
+            header.alignment = {
+                horizontal: "center",
+                vertical: "middle"
+            };
+
+
+            // ============================================
+            // DATA
+            // ============================================
+
+            result.rows.forEach(row => {
+
+                worksheet.addRow([
+
+                    row.registration_no,
+
+                    row.full_name,
+
+                    row.diocese,
+
+                    row.gender,
+
+                    formatPaymentMethod(
+                        row.payment_method
+                    ),
+
+                    row.payment_reference || "-",
+
+                    row.amount_received !== null &&
+                    row.amount_received !== undefined
+                        ? Number(row.amount_received)
+                        : 0,
+
+                    row.payment_status,
+
+                    row.created_at
+                        ? new Date(row.created_at)
+                        : null
+
+                ]);
+
+            });
+
+
+            // ============================================
+            // FORMAT AMOUNT COLUMN
+            // ============================================
+
+            worksheet.getColumn(7).numFmt =
+                '"Ksh" #,##0.00';
+
+
+            // ============================================
+            // FORMAT DATE COLUMN
+            // ============================================
+
+            worksheet.getColumn(9).numFmt =
+                "dd/mm/yyyy hh:mm";
+
+
+            // ============================================
+            // COLUMN WIDTHS
+            // ============================================
+
+            worksheet.columns = [
+
+                {
+                    key: "registration_no",
+                    width: 20
+                },
+
+                {
+                    key: "full_name",
+                    width: 30
+                },
+
+                {
+                    key: "diocese",
+                    width: 30
+                },
+
+                {
+                    key: "gender",
+                    width: 15
+                },
+
+                {
+                    key: "payment_method",
+                    width: 20
+                },
+
+                {
+                    key: "payment_reference",
+                    width: 25
+                },
+
+                {
+                    key: "amount_received",
+                    width: 20
+                },
+
+                {
+                    key: "payment_status",
+                    width: 20
+                },
+
+                {
+                    key: "created_at",
+                    width: 25
+                }
+
+            ];
+
+
+            // ============================================
+            // FREEZE HEADER
+            // ============================================
+
+            worksheet.views = [
+                {
+                    state: "frozen",
+                    ySplit: 2
+                }
+            ];
+
+
+            // ============================================
+            // AUTO FILTER
+            // ============================================
+
+            worksheet.autoFilter = {
+                from: "A2",
+                to: "I2"
+            };
+
+
+            // ============================================
+            // FILE NAME
+            // ============================================
+
+            let fileName =
+                "Provincial_Kayo_Conference_2026_Registrations.xlsx";
+
+
+            if (diocese) {
+
+                const dioceseResult =
+                    await pool.query(
+                        "SELECT name FROM dioceses WHERE id = $1",
+                        [diocese]
+                    );
+
+
+                if (
+                    dioceseResult.rows.length > 0
+                ) {
+
+                    const cleanName =
+                        dioceseResult.rows[0].name
+                            .replace(
+                                /[^a-zA-Z0-9]+/g,
+                                "-"
+                            );
+
+
+                    fileName =
+                        `${cleanName}-Registrations.xlsx`;
+
+                }
+
             }
+
+
+            // ============================================
+            // SEND EXCEL FILE
+            // ============================================
+
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            );
+
+
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="${fileName}"`
+            );
+
+
+            await workbook.xlsx.write(res);
+
+            res.end();
+
+
+        } catch (error) {
+
+            console.error(
+                "Excel export error:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Failed to export registrations"
+
+            });
 
         }
 
-
-        // ====================================
-        // RESPONSE
-        // ====================================
-
-        res.setHeader(
-            "Content-Type",
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        );
-
-
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="${fileName}"`
-        );
-
-
-        await workbook.xlsx.write(res);
-
-        res.end();
-
-
-    } catch (error) {
-
-        console.error(
-            "Excel export error:",
-            error
-        );
-
-
-        res.status(500).json({
-
-            success: false,
-
-            message:
-                "Failed to export registrations"
-
-        });
-
     }
-
-});
+);
 
 
 // ============================================

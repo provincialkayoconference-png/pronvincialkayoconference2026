@@ -459,16 +459,67 @@ function formatPayment(method) {
 // ============================================
 // MARK PAYMENT PAID
 // ============================================
+// ============================================
+// CONFIRM PAYMENT
+// ============================================
 async function markPaid(id) {
 
-    const confirmed =
-        confirm(
-            "Are you sure you want to mark this payment as PAID?"
+    const registration =
+        registrations.find(
+            reg => Number(reg.id) === Number(id)
         );
 
 
-    if (!confirmed)
+    if (!registration) {
+
+        alert(
+            "Registration not found."
+        );
+
         return;
+
+    }
+
+
+    let paymentReference = "";
+
+
+    // Ask for payment reference only when M-Pesa
+    if (
+        registration.payment_method === "MPESA"
+    ) {
+
+        paymentReference =
+            prompt(
+                `Confirm payment for ${registration.full_name}.\n\n` +
+                `Payment method: M-Pesa\n\n` +
+                `Enter the M-Pesa transaction code if available.\n` +
+                `Leave blank if the registrant does not have the code.`
+            );
+
+
+        // User clicked Cancel
+        if (paymentReference === null) {
+
+            return;
+
+        }
+
+    } else {
+
+        const confirmed =
+            confirm(
+                `Confirm payment for ${registration.full_name}?`
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+    }
 
 
     try {
@@ -477,7 +528,22 @@ async function markPaid(id) {
             await fetch(
                 `/api/admin/registrations/${id}/payment`,
                 {
-                    method: "PATCH"
+                    method: "PATCH",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        payment_reference:
+                            paymentReference
+                                ? paymentReference.trim()
+                                : null
+
+                    })
+
                 }
             );
 
@@ -490,11 +556,17 @@ async function markPaid(id) {
 
             alert(
                 data.message ||
-                "Failed to update payment"
+                "Failed to confirm payment"
             );
 
             return;
+
         }
+
+
+        alert(
+            "Payment confirmed successfully."
+        );
 
 
         await loadRegistrations();
@@ -505,11 +577,13 @@ async function markPaid(id) {
     } catch (error) {
 
         console.error(
+            "Payment confirmation error:",
             error
         );
 
+
         alert(
-            "Failed to update payment"
+            "Failed to confirm payment."
         );
 
     }
