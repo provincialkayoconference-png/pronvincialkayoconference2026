@@ -13,6 +13,11 @@ const app = express();
 // SESSION CONFIGURATION
 // ============================================
 
+app.set("trust proxy", 1);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -20,11 +25,11 @@ app.use(
         saveUninitialized: false,
 
         cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 8
-}
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 1000 * 60 * 60 * 8
+        }
     })
 );
 
