@@ -99,7 +99,11 @@ app.post("/api/registrations", async (req, res) => {
             full_name,
             diocese_id,
             gender,
-            payment_method
+            payment_method,
+            cash_amount,
+            mpesa_code,
+            cheque_number,
+            bank_reference
         } = req.body;
 
         // Validate required fields
@@ -124,12 +128,110 @@ app.post("/api/registrations", async (req, res) => {
         }
 
         // Validate payment method
-        if (!["MPESA", "CASH", "CHEQUE"].includes(cleanPaymentMethod)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid payment method"
-            });
-        }
+        // ============================================
+// VALIDATE PAYMENT METHOD
+// ============================================
+
+if (![
+    "MPESA",
+    "CASH",
+    "CHEQUE",
+    "BANK_TRANSFER"
+].includes(cleanPaymentMethod)) {
+
+    return res.status(400).json({
+        success: false,
+        message: "Invalid payment method"
+    });
+}
+
+
+// ============================================
+// VALIDATE PAYMENT DETAILS
+// ============================================
+
+let paymentReference = null;
+let amountReceived = null;
+
+
+// CASH
+if (cleanPaymentMethod === "CASH") {
+
+    if (
+        !cash_amount ||
+        Number(cash_amount) <= 0
+    ) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the amount paid in cash."
+        });
+
+    }
+
+    amountReceived =
+        Number(cash_amount);
+}
+
+
+// MPESA
+if (cleanPaymentMethod === "MPESA") {
+
+    if (
+        !mpesa_code ||
+        !mpesa_code.trim()
+    ) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the M-Pesa transaction code."
+        });
+
+    }
+
+    paymentReference =
+        mpesa_code.trim().toUpperCase();
+}
+
+
+// CHEQUE
+if (cleanPaymentMethod === "CHEQUE") {
+
+    if (
+        !cheque_number ||
+        !cheque_number.trim()
+    ) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the cheque number."
+        });
+
+    }
+
+    paymentReference =
+        cheque_number.trim();
+}
+
+
+// BANK
+if (cleanPaymentMethod === "BANK_TRANSFER") {
+
+    if (
+        !bank_reference ||
+        !bank_reference.trim()
+    ) {
+
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the bank transaction/deposit reference."
+        });
+
+    }
+
+    paymentReference =
+        bank_reference.trim();
+}
 
         // Check whether diocese exists
         const dioceseCheck = await pool.query(
@@ -186,16 +288,20 @@ const registrationNo =
                 diocese_id,
                 gender,
                 payment_method,
-                payment_status
+                payment_status,
+                payment_reference,
+                amount_received
             )
-            VALUES ($1, $2, $3, $4, $5, 'PENDING')
+            VALUES ($1, $2, $3, $4, $5, 'PENDING', $6, $7)
             RETURNING *`,
             [
                 registrationNo,
                 cleanName,
                 diocese_id,
                 cleanGender,
-                cleanPaymentMethod
+                cleanPaymentMethod,
+                paymentReference,
+                amountReceived
             ]
         );
 
@@ -247,6 +353,8 @@ app.get("/api/admin/registrations", requireAdmin, async (req, res) => {
                 r.gender,
                 r.payment_method,
                 r.payment_status,
+                r.payment_reference,
+                r.amount_received,
                 r.created_at,
                 d.name AS diocese
             FROM registrations r
@@ -601,6 +709,8 @@ app.get("/api/admin/export",
                 d.name AS diocese,
                 r.gender,
                 r.payment_method,
+                r.payment_reference,
+                r.amount_received,
                 r.payment_status,
                 r.created_at
             FROM registrations r
@@ -688,6 +798,8 @@ app.get("/api/admin/export",
             "Diocese",
             "Gender",
             "Payment Method",
+            "Payment Reference",
+            "Amount Received",
             "Payment Status",
             "Registration Date"
         ]);
@@ -792,7 +904,7 @@ app.get("/api/admin/export",
         // ====================================
 
         let fileName =
-            "ACK-Registrations.xlsx";
+            "Provincial_kayo_conference-Registrations.xlsx";
 
 
         if (diocese) {

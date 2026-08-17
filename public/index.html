@@ -103,6 +103,58 @@
                     </select>
                 </div>
 
+                <div class="form-group payment-details" id="cash-details" style="display: none;">
+    <label for="cash_amount">Amount Paid (Ksh)</label>
+
+    <input
+        type="number"
+        id="cash_amount"
+        name="cash_amount"
+        min="0"
+        step="1"
+        placeholder="Enter amount paid"
+    >
+</div>
+
+<!-- MPESA -->
+<div class="form-group payment-details" id="mpesa-details" style="display: none;">
+    <label for="mpesa_code">M-Pesa Transaction Code</label>
+
+    <input
+        type="text"
+        id="mpesa_code"
+        name="mpesa_code"
+        maxlength="20"
+        placeholder="e.g. QGH7K8XXXX"
+    >
+</div>
+
+<!-- CHEQUE -->
+<div class="form-group payment-details" id="cheque-details" style="display: none;">
+    <label for="cheque_number">Cheque Number / Reference</label>
+
+    <input
+        type="text"
+        id="cheque_number"
+        name="cheque_number"
+        maxlength="50"
+        placeholder="Enter cheque number"
+    >
+</div>
+
+<!-- BANK -->
+<div class="form-group payment-details" id="bank-details" style="display: none;">
+    <label for="bank_reference">Bank Transaction / Deposit Reference</label>
+
+    <input
+        type="text"
+        id="bank_reference"
+        name="bank_reference"
+        maxlength="100"
+        placeholder="Enter bank reference"
+    >
+</div>
+
                 <button
                     type="submit"
                     id="submitButton"

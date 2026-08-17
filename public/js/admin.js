@@ -437,6 +437,8 @@ function formatPayment(method) {
 
     if (method === "CHEQUE")
         return "Cheque";
+    if (method === "BANK_TRANSFER")
+        return "Bank Transfer";
 
     return method;
 

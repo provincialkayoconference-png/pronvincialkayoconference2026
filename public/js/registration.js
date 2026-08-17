@@ -3,6 +3,7 @@ const dioceseSelect = document.getElementById("diocese");
 const messageBox = document.getElementById("message");
 const submitButton = document.getElementById("submitButton");
 
+
 // ============================================
 // LOAD DIOCESES
 // ============================================
@@ -12,22 +13,14 @@ async function loadDioceses() {
 
         const response = await fetch("/api/dioceses");
 
-        console.log("API response status:", response.status);
-
         if (!response.ok) {
-            throw new Error(
-                `Server returned ${response.status}`
-            );
+            throw new Error(`Server returned ${response.status}`);
         }
 
         const data = await response.json();
 
-        console.log("Diocese data:", data);
-
         if (!data.success) {
-            throw new Error(
-                data.message || "Failed to load dioceses"
-            );
+            throw new Error(data.message || "Failed to load dioceses");
         }
 
         dioceseSelect.innerHTML =
@@ -48,10 +41,7 @@ async function loadDioceses() {
 
     } catch (error) {
 
-        console.error(
-            "Error loading dioceses:",
-            error
-        );
+        console.error("Error loading dioceses:", error);
 
         dioceseSelect.innerHTML =
             '<option value="">Unable to load dioceses</option>';
@@ -72,11 +62,79 @@ function showMessage(text, type) {
 
 
 // ============================================
+// PAYMENT DETAILS
+// ============================================
+const paymentMethod =
+    document.getElementById("payment_method");
+
+const paymentSections = {
+    CASH: document.getElementById("cash-details"),
+    MPESA: document.getElementById("mpesa-details"),
+    CHEQUE: document.getElementById("cheque-details"),
+    BANK_TRANSFER: document.getElementById("bank-details")
+};
+
+const paymentInputs = {
+    CASH: document.getElementById("cash_amount"),
+    MPESA: document.getElementById("mpesa_code"),
+    CHEQUE: document.getElementById("cheque_number"),
+    BANK_TRANSFER: document.getElementById("bank_reference")
+};
+
+
+paymentMethod.addEventListener("change", function () {
+
+    // Hide all payment detail sections
+    Object.values(paymentSections).forEach(section => {
+
+        if (section) {
+            section.style.display = "none";
+        }
+
+    });
+
+
+    // Remove required from all payment inputs
+    Object.values(paymentInputs).forEach(input => {
+
+        if (input) {
+            input.required = false;
+            input.value = "";
+        }
+
+    });
+
+
+    const selectedMethod = this.value;
+
+
+    // Show selected payment section
+    if (paymentSections[selectedMethod]) {
+
+        paymentSections[selectedMethod].style.display =
+            "block";
+
+    }
+
+
+    // Make selected field required
+    if (paymentInputs[selectedMethod]) {
+
+        paymentInputs[selectedMethod].required =
+            true;
+
+    }
+
+});
+
+
+// ============================================
 // SUBMIT REGISTRATION
 // ============================================
 form.addEventListener("submit", async (event) => {
 
     event.preventDefault();
+
 
     const full_name =
         document.getElementById("full_name").value.trim();
@@ -89,6 +147,20 @@ form.addEventListener("submit", async (event) => {
 
     const payment_method =
         document.getElementById("payment_method").value;
+
+
+    // Payment details
+    const cash_amount =
+        document.getElementById("cash_amount").value;
+
+    const mpesa_code =
+        document.getElementById("mpesa_code").value.trim();
+
+    const cheque_number =
+        document.getElementById("cheque_number").value.trim();
+
+    const bank_reference =
+        document.getElementById("bank_reference").value.trim();
 
 
     submitButton.disabled = true;
@@ -115,10 +187,23 @@ form.addEventListener("submit", async (event) => {
                 },
 
                 body: JSON.stringify({
+
                     full_name,
+
                     diocese_id,
+
                     gender,
-                    payment_method
+
+                    payment_method,
+
+                    cash_amount,
+
+                    mpesa_code,
+
+                    cheque_number,
+
+                    bank_reference
+
                 })
             }
         );
@@ -137,6 +222,15 @@ form.addEventListener("submit", async (event) => {
 
             form.reset();
 
+            // Hide payment sections after reset
+            Object.values(paymentSections).forEach(section => {
+
+                if (section) {
+                    section.style.display = "none";
+                }
+
+            });
+
         } else {
 
             let errorMessage =
@@ -148,6 +242,7 @@ form.addEventListener("submit", async (event) => {
 
                 errorMessage +=
                     ` Registration number: ${data.registration_no}`;
+
             }
 
 
@@ -155,6 +250,7 @@ form.addEventListener("submit", async (event) => {
                 errorMessage,
                 "error"
             );
+
         }
 
 
@@ -176,6 +272,7 @@ form.addEventListener("submit", async (event) => {
 
         submitButton.textContent =
             "REGISTER";
+
     }
 
 });
